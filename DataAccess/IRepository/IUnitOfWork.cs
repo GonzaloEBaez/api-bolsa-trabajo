@@ -20,5 +20,11 @@ namespace DataAccess.IRepository
 
         //el rollbackAsync es para que se deshagan los cambios en la base de datos
         Task RollbackAsync();
+
+        IGenericRepository<EstadoOferta> EstadoOfertaRepository { get; }
+        IGenericRepository<Oferta> OfertaRepository { get; }   // <-- agregado
+        Task<int> SaveChangesAsync(CancellationToken ct = default);
     }
+
+    
 }

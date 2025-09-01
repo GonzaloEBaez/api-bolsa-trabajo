@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace DataAccess.Entities;
-
-public class EstadoOferta
+public class Carrera
     {
         public int Id { get; set; }
         public string Codigo { get; set; } = null!;
         public string Nombre { get; set; } = null!;
-        public virtual ICollection<OfertaHistorial> OfertasHistorial { get; set; } = new List<OfertaHistorial>();
+        public virtual ICollection<OfertaCarrera> OfertasCarrera { get; set; } = new List<OfertaCarrera>();
     }

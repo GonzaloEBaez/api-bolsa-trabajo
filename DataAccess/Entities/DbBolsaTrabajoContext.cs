@@ -39,6 +39,44 @@ public partial class DbBolsaTrabajoContext : DbContext
         
         });
 
+        modelBuilder.Entity<Oferta>(e =>
+        {
+            e.ToTable("Oferta");
+            e.HasKey(x => x.Id);
+
+            // columnas primitivas
+            e.Property(x => x.Id).HasColumnName("Id");
+            e.Property(x => x.IdPerfilEmpresa).HasColumnName("IdPerfilEmpresa");
+            e.Property(x => x.Titulo).HasColumnName("Titulo").IsRequired();
+            e.Property(x => x.Descripcion).HasColumnName("Descripcion");
+            e.Property(x => x.IdModalidad).HasColumnName("IdModalidad");
+            e.Property(x => x.IdTipoContrato).HasColumnName("IdTipoContrato");
+            e.Property(x => x.FechaInicio).HasColumnName("FechaInicio");
+            e.Property(x => x.FechaFin).HasColumnName("FechaFin");
+            e.Property(x => x.IdLocalidad).HasColumnName("IdLocalidad");
+            e.Property(x => x.FechaAlta).HasColumnName("FechaAlta");
+            e.Property(x => x.FechaModificacion).HasColumnName("FechaModificacion");
+            e.Property(x => x.FechaBaja).HasColumnName("FechaBaja");
+
+            // FKs: decirle a EF que la FK es IdXxx (no XxxId)
+            e.HasOne(x => x.PerfilEmpresa)
+            .WithMany(p => p.Ofertas)
+            .HasForeignKey(x => x.IdPerfilEmpresa);
+
+            e.HasOne(x => x.Modalidad)
+            .WithMany(m => m.Ofertas)
+            .HasForeignKey(x => x.IdModalidad);
+
+            e.HasOne(x => x.TipoContrato)
+            .WithMany(t => t.Ofertas)
+            .HasForeignKey(x => x.IdTipoContrato);
+
+            e.HasOne(x => x.Localidad)
+            .WithMany(l => l.Ofertas)
+            .HasForeignKey(x => x.IdLocalidad);
+        });
+
+
 
         OnModelCreatingPartial(modelBuilder);
     }

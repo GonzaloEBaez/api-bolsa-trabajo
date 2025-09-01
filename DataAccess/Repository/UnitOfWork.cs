@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
-using DataAccess.IRepository;
 using DataAccess.Entities;
+using DataAccess.IRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -12,48 +10,37 @@ namespace DataAccess.Repository
 {
     public class UnitOfWork : IUnitOfWork
     {
+        private readonly DbBolsaTrabajoContext _context;
+        private IDbContextTransaction? _transaction;
 
-        protected readonly DbBolsaTrabajoContext _context;
-        private IDbContextTransaction _transaction;
-
-
-
-        //tengo que crear _transaction
+        // Repositorios específicos (lazy)
+        private IGenericRepository<EstadoOferta>? _estadoOfertaRepository;
+        private IGenericRepository<Oferta>? _ofertaRepository;
 
         public UnitOfWork(DbBolsaTrabajoContext context)
         {
-            _context = context;
-
-  
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        
+        // --------- Repos genérico y específicos ----------
         public IGenericRepository<T> GenericRepository<T>() where T : class
-        {
-            return new GenericRepository<T>(_context);
-        }
+            => new GenericRepository<T>(_context);
 
+        public IGenericRepository<EstadoOferta> EstadoOfertaRepository
+            => _estadoOfertaRepository ??= new GenericRepository<EstadoOferta>(_context);
 
+        public IGenericRepository<Oferta> OfertaRepository
+            => _ofertaRepository ??= new GenericRepository<Oferta>(_context);
 
+        // --------- Persistencia ----------
+        public Task<int> SaveChangesAsync(CancellationToken ct = default)
+            => _context.SaveChangesAsync(ct);
+
+        // --------- Transacciones ----------
         public async Task BeginTransactionAsync()
         {
-            try
-            {
-                if (_transaction == null)
-                {
-                    _transaction = await _context.Database.BeginTransactionAsync();
-                }
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                _transaction?.Dispose();
-                _transaction = null;
-
-            }
-
-
+            if (_transaction != null) return; // ya hay una activa
+            _transaction = await _context.Database.BeginTransactionAsync();
         }
 
         public async Task CommitAsync()
@@ -61,44 +48,53 @@ namespace DataAccess.Repository
             try
             {
                 await _context.SaveChangesAsync();
-                _transaction?.Commit();
+                if (_transaction != null)
+                {
+                    await _transaction.CommitAsync();
+                }
             }
             catch
             {
-                _transaction?.Rollback();
+                if (_transaction != null)
+                {
+                    await _transaction.RollbackAsync();
+                }
                 throw;
             }
             finally
             {
-                _transaction?.Dispose();
-                _transaction = null;
+                if (_transaction != null)
+                {
+                    await _transaction.DisposeAsync();
+                    _transaction = null;
+                }
             }
-        }
-
-
-        public void Dispose()
-        {
-            //el dispose es para liberar recursos
-
-            // Dispose of the context
-
-            _context.Dispose();
         }
 
         public async Task RollbackAsync()
         {
             try
             {
-                _transaction?.Rollback();
+                if (_transaction != null)
+                {
+                    await _transaction.RollbackAsync();
+                }
             }
             finally
             {
-                _transaction?.Dispose();
-                _transaction = null;
+                if (_transaction != null)
+                {
+                    await _transaction.DisposeAsync();
+                    _transaction = null;
+                }
             }
         }
 
-
-
+        // --------- Dispose ----------
+        public void Dispose()
+        {
+            _transaction?.Dispose();
+            _context.Dispose();
+        }
     }
 }

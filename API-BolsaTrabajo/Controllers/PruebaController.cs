@@ -59,12 +59,12 @@ namespace API_Client.Controllers
 
         [HttpPost]
         [Route("/add_prueba")]
-        public async Task<ApiResponse> Add_Prueba([FromBody] PruebaDTO nuevaPrueba)
+        public Task<ApiResponse> Add_Prueba([FromBody] PruebaDTO nuevaPrueba)
         {
             try
             {
                 // await _service.Add_PRUEBA(nuevaPrueba);
-                return new ApiResponse(new { message = "Prueba agregada exitosamente." });
+                return Task.FromResult(new ApiResponse(new { message = "Prueba agregada exitosamente." }));
             }
             catch (ApiException)
             {

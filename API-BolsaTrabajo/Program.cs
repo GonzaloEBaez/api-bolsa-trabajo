@@ -13,6 +13,9 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using AutoWrapper;
+
+using BusinessLogic.Services;                 // <-- NUEVO (namespace correcto)
+using BusinessLogic.Services.Interfaces; 
 // using BussinessLogic.DTO.Email;
 using Microsoft.OpenApi.Models;
 using BussinessLogic.Services;
@@ -83,6 +86,10 @@ builder.Services.AddDbContext<DbBolsaTrabajoContext>(options => options.UseSqlSe
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 //AGREGO LOS SERVICIOS QUE VOY A USAR
 builder.Services.AddScoped<ServicePrueba>();
+
+// OFERTA
+builder.Services.AddScoped<IOfertaService, OfertaService>(); 
+
 
 
 
